@@ -2,9 +2,9 @@ from adafruit_macropad import MacroPad
 import time
 
 # Constants
-KEY_FUNCS = ["Toggle Discord Mute", "", "Change Light Mode", "", "", "", "", "", "", "", "", ""]
+KEY_FUNCS = ["Toggle Discord Mute", "Pause/Play", "Skipped Track", "", "", "", "", "", "", "", "", ""]
 NUM_MODES = 6
-MESSAGE_REMOVE = 1000
+MESSAGE_REMOVE = 800
 TITLE = "behold!"
 DEFAULT_BRIGHTNESS = 0.05
 
@@ -17,6 +17,7 @@ macropad.pixels.brightness = DEFAULT_BRIGHTNESS
 mode = 1
 last_position = 0
 till_message_remove = 0
+mic_muted = False
 
 while True:
     key_event = macropad.keys.events.get()
@@ -34,33 +35,44 @@ while True:
 
             # Discord Mute
             if key_event.key_number == 0:
+                mic_muted = not mic_muted
                 macropad.keyboard.press(
                     macropad.Keycode.CAPS_LOCK
                 )
                 macropad.keyboard.release_all()
-
+                text_lines[1].text="Mic: " + "Muted" if mic_muted else "Not Muted"
+            # Play/Pause
+            if key_event.key_number == 1:
+                macropad.consumer_control.send(
+                    macropad.ConsumerControlCode.PLAY_PAUSE
+                )
             # Change Light Mode
             if key_event.key_number == 2:
-                mode = mode+1 if mode < 4 else 1
-                brightness = round(mode/NUM_MODES,2)
-                macropad.pixels.brightness = brightness
-                till_message_remove = MESSAGE_REMOVE
-                text_lines[1].text="Light Mode: {}".format(brightness)
+                macropad.consumer_control.send(
+                    macropad.ConsumerControlCode.SCAN_NEXT_TRACK
+                )
             # TODO RGB MODES and stuff
 
     macropad.encoder_switch_debounced.update()
 
     if macropad.encoder_switch_debounced.pressed:
-        macropad.consumer_control.send(
-                macropad.ConsumerControlCode.PLAY_PAUSE
-        )
+        mode = mode+1 if mode < 4 else 1
+        brightness = round(mode/NUM_MODES,2)
+        macropad.pixels.brightness = brightness
+        till_message_remove = MESSAGE_REMOVE
+        text_lines[1].text="Light Mode: {}".format(brightness)
 
     current_position = macropad.encoder
 
     if macropad.encoder > last_position:
-        macropad.consumer_control.send(
+        if key_event and key_event.key_number == 0:
+            macropad.consumer_control.send(
                 macropad.ConsumerControlCode.VOLUME_INCREMENT
-        )
+            )
+        else:
+            macropad.consumer_control.send(
+                    macropad.ConsumerControlCode.VOLUME_INCREMENT
+            )
         last_position = current_position
 
     if macropad.encoder < last_position:
@@ -70,5 +82,6 @@ while True:
         last_position = current_position
     
     macropad.pixels.fill((219, 123, 48))
+    macropad.pixels[0] = (52, 199, 220) if mic_muted else (219, 123, 48)
 
     text_lines.show()

@@ -13,13 +13,13 @@ Copy `code.py` and `/lib` to root of macropad, see tutorial for more info.
 ## Rotary Encoder
 
 - Encoder: Volume Control
-- Switch: Pause/Play
+- Switch: Toggle between brightness modes (to expand later)
 
 ## Keys
 
 0. Discord Mute (Custom keybind, bug with discord repeating keys)
-1. None
-2. Toggle between brightness modes (to expand later)
+1. Pause/Play
+2. Skip Track
 
 ## TODO (no order)
 
@@ -30,6 +30,7 @@ Copy `code.py` and `/lib` to root of macropad, see tutorial for more info.
 - [ ] Create profiles
 - [ ] Use OLED more
 - [ ] Check out [Macropad Hotkeys Project Guide](https://learn.adafruit.com/macropad-hotkeys) guide
+- [ ] Refactor message system and macros system to be more modular.
 
 ## Bugs
 
