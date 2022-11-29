@@ -25,7 +25,7 @@ while True:
             # Discord Mute
             if key_event.key_number == 0:
                 macropad.keyboard.press(
-                    macropad.Keycode.COMMAND, macropad.Keycode.SHIFT, macropad.Keycode.L, macropad.Keycode.M
+                    macropad.Keycode.CAPS_LOCK
                 )
                 macropad.keyboard.release_all()
 
