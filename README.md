@@ -31,6 +31,11 @@ Copy `code.py` and `/lib` to root of macropad, see tutorial for more info.
 - [ ] Use OLED more
 - [ ] Check out [Macropad Hotkeys Project Guide](https://learn.adafruit.com/macropad-hotkeys) guide
 
+## Bugs
+
+- [ ] Remove sleep causing unresponsiveness but maintain message duration
+- [ ] Random reloads?
+
 # Resources
 
 - [Adafruit Macropad RP2040 Guide](https://learn.adafruit.com/adafruit-macropad-rp2040)
