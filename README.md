@@ -33,7 +33,7 @@ Copy `code.py` and `/lib` to root of macropad, see tutorial for more info.
 
 ## Bugs
 
-- [ ] Remove sleep causing unresponsiveness but maintain message duration
+- [x] Remove sleep causing unresponsiveness but maintain message duration
 - [ ] Random reloads?
 
 # Resources

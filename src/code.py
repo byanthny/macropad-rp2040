@@ -1,25 +1,35 @@
 from adafruit_macropad import MacroPad
 import time
 
+# Constants
+KEY_FUNCS = ["Toggle Discord Mute", "", "Change Light Mode", "", "", "", "", "", "", "", "", ""]
+NUM_MODES = 6
+MESSAGE_REMOVE = 1000
+TITLE = "behold!"
+DEFAULT_BRIGHTNESS = 0.05
+
+# Init 
 macropad = MacroPad()
+text_lines = macropad.display_text(title=TITLE)
+macropad.pixels.brightness = DEFAULT_BRIGHTNESS
 
-text_lines = macropad.display_text(title="behold!")
-key_commands = ["Toggle Discord Mute", "", "Change Light Mode", "", "", "", "", "", "", "", "", ""]
-num_modes = 4
-
+# State Variables
 mode = 1
 last_position = 0
+till_message_remove = 0
 
 while True:
     key_event = macropad.keys.events.get()
     
-    text_lines[0].text=" "
-    text_lines[1].text=" "
+    till_message_remove = till_message_remove - 1 if till_message_remove > 0 else 0
+    if till_message_remove == 0:
+        text_lines[0].text=" "
+        text_lines[1].text=" "
 
     if key_event:
         if key_event.pressed:
-            
-            text_lines[1].text=key_commands[key_event.key_number]
+            till_message_remove = MESSAGE_REMOVE
+            text_lines[0].text=KEY_FUNCS[key_event.key_number]
             macropad.pixels[key_event.key_number] = (52, 199, 220)
 
             # Discord Mute
@@ -32,17 +42,11 @@ while True:
             # Change Light Mode
             if key_event.key_number == 2:
                 mode = mode+1 if mode < 4 else 1
-                if mode == 1:
-                    macropad.pixels.brightness = 0.5
-                if mode == 2:
-                    macropad.pixels.brightness = 0.25
-                if mode == 3:
-                    macropad.pixels.brightness = 0.05
-                if mode == 4:
-                    macropad.pixels.brightness = 0.0
+                brightness = round(mode/NUM_MODES,2)
+                macropad.pixels.brightness = brightness
+                till_message_remove = MESSAGE_REMOVE
+                text_lines[1].text="Light Mode: {}".format(brightness)
             # TODO RGB MODES and stuff
-
-        time.sleep(0.4)
 
     macropad.encoder_switch_debounced.update()
 
