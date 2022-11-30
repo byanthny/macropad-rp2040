@@ -17,7 +17,7 @@ macropad.pixels.brightness = DEFAULT_BRIGHTNESS
 mode = -1
 last_position = 0
 till_message_remove = 0
-mic_muted = False
+mic_muted = True
 
 while True:
     key_event = macropad.keys.events.get()
@@ -37,7 +37,7 @@ while True:
             if key_event.key_number == 0:
                 mic_muted = not mic_muted
                 macropad.keyboard.press(
-                    macropad.Keycode.CAPS_LOCK
+                    macropad.Keycode.CAPS_LOCK, macropad.Keycode.CONTROL
                 )
                 macropad.keyboard.release_all()
                 text_lines[1].text="Mic: " + "Muted" if mic_muted else "Not Muted"
@@ -83,6 +83,6 @@ while True:
         last_position = current_position
     
     macropad.pixels.fill((219, 123, 48))
-    macropad.pixels[0] = (52, 199, 220) if mic_muted else (219, 123, 48)
+    macropad.pixels[0] = (52, 199, 220) if not mic_muted else (219, 123, 48)
 
     text_lines.show()
