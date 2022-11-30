@@ -2,7 +2,7 @@ from adafruit_macropad import MacroPad
 import time
 
 # Constants
-KEY_FUNCS = ["Toggle Discord Mute", "Pause/Play", "Skipped Track", "", "", "", "", "", "", "", "", ""]
+KEY_FUNCS = ["Toggle Discord Mute", "Pause/Play", "Skipped Track", "", "", "", "", "", "", "", "", "", "Changing Volume", "Changing Brightness"]
 NUM_MODES = 6
 MESSAGE_REMOVE = 800
 TITLE = "behold!"
@@ -14,7 +14,7 @@ text_lines = macropad.display_text(title=TITLE)
 macropad.pixels.brightness = DEFAULT_BRIGHTNESS
 
 # State Variables
-mode = 1
+mode = -1
 last_position = 0
 till_message_remove = 0
 mic_muted = False
@@ -56,26 +56,27 @@ while True:
     macropad.encoder_switch_debounced.update()
 
     if macropad.encoder_switch_debounced.pressed:
-        mode = mode+1 if mode < 4 else 1
+        mode = mode+1 if mode < 4 else 0
         brightness = round(mode/NUM_MODES,2)
         macropad.pixels.brightness = brightness
         till_message_remove = MESSAGE_REMOVE
+        text_lines[0].text=KEY_FUNCS[13]
         text_lines[1].text="Light Mode: {}".format(brightness)
 
     current_position = macropad.encoder
 
     if macropad.encoder > last_position:
-        if key_event and key_event.key_number == 0:
-            macropad.consumer_control.send(
-                macropad.ConsumerControlCode.VOLUME_INCREMENT
-            )
-        else:
-            macropad.consumer_control.send(
-                    macropad.ConsumerControlCode.VOLUME_INCREMENT
-            )
+        till_message_remove = MESSAGE_REMOVE
+        text_lines[0].text=KEY_FUNCS[12]
+        text_lines[1].text="Volume Increased"
+        macropad.consumer_control.send(
+            macropad.ConsumerControlCode.VOLUME_INCREMENT
+        )
         last_position = current_position
 
     if macropad.encoder < last_position:
+        text_lines[0].text=KEY_FUNCS[12]
+        text_lines[1].text="Volume Decreased"
         macropad.consumer_control.send(
                 macropad.ConsumerControlCode.VOLUME_DECREMENT
         )
