@@ -1,4 +1,4 @@
-# RP2040 Macropad
+# RP2040 Macropad [use at your own risk]
 
 my code (and future libraries) for custom macropad built with adafruit macropad rp2040 kit
 
@@ -13,24 +13,26 @@ Copy `code.py` and `/lib` to root of macropad, see tutorial for more info.
 ## Rotary Encoder
 
 - Encoder: Volume Control
-- Switch: Toggle between brightness modes (to expand later)
+- Switch: Toggle between brightness modes
 
 ## Keys
 
 0. Discord Mute (Custom keybind, bug with discord repeating keys)
 1. Pause/Play
 2. Skip Track
+3. TBA
 
 ## TODO (no order)
 
-- [ ] Build with rust
+- [ ] Build with rust?
 - [ ] Map out rest of keys
 - [ ] Add more light modes
   - [ ] RGB
-- [ ] Create profiles
+- [ ] Create profiles & switching
 - [ ] Use OLED more
 - [ ] Check out [Macropad Hotkeys Project Guide](https://learn.adafruit.com/macropad-hotkeys) guide
 - [ ] Refactor message system and macros system to be more modular.
+- [ ] double press and combination macros?
 
 ## Bugs
 
