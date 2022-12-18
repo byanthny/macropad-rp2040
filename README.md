@@ -20,7 +20,8 @@ Copy `code.py` and `/lib` to root of macropad, see tutorial for more info.
 0. Discord Mute (Custom keybind, bug with discord repeating keys)
 1. Pause/Play
 2. Skip Track
-3. TBA
+3. Screenshot Entire Screen(s) - Command + Shift + 3
+4. Screenshot Selection of Screen - Command + Shift + 4
 
 ## TODO (no order)
 

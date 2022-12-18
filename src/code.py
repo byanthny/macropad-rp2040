@@ -52,6 +52,18 @@ while True:
                     macropad.ConsumerControlCode.SCAN_NEXT_TRACK
                 )
             # TODO RGB MODES and stuff
+            # Screenshot Entire Screen
+            if key_event.key_number == 3:
+                macropad.keyboard.press(
+                    macropad.Keycode.COMMAND, macropad.Keycode.SHIFT, macropad.Keycode.THREE
+                )
+                macropad.keyboard.release_all()
+            # Screenshot Selected Area
+            if key_event.key_number == 4:
+                macropad.keyboard.press(
+                    macropad.Keycode.COMMAND, macropad.Keycode.SHIFT, macropad.Keycode.FOUR
+                )
+                macropad.keyboard.release_all()
 
     macropad.encoder_switch_debounced.update()
 
