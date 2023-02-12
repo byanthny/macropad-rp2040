@@ -6,7 +6,7 @@ KEY_FUNCS = ["Toggle Discord Mute", "Pause/Play", "Skipped Track", "", "", "", "
 NUM_MODES = 6
 MESSAGE_REMOVE = 800
 TITLE = "behold!"
-DEFAULT_BRIGHTNESS = 0.05
+DEFAULT_BRIGHTNESS = 0.00
 
 # Init 
 macropad = MacroPad()
