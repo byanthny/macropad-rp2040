@@ -34,6 +34,7 @@ Copy `code.py` and `/lib` to root of macropad, see tutorial for more info.
 - [ ] Check out [Macropad Hotkeys Project Guide](https://learn.adafruit.com/macropad-hotkeys) guide
 - [ ] Refactor message system and macros system to be more modular.
 - [ ] double press and combination macros?
+- [ ] keys & actions on oled
 
 ## Bugs
 
