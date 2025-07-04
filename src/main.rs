@@ -61,7 +61,15 @@ fn main() -> ! {
         &mut watchdog, // pass the watchdog to reset if needed
     );
 
+    // Configure GPIO pin 1 as a push-pull output (for an LED)
+    // Pushes current to the pin when high, pulls it to 0V
+    let mut led_pin = pins.gpio1.into_push_pull_output();
+
+    // Flashes the LED on and off every 500ms
     loop {
-        //forever
+        led_pin.set_high().unwrap();  // Set High, 3.3V (LED on)
+        delay.delay_ms(500);          // Wait 500ms using the delay object
+        led_pin.set_low().unwrap();   // Set Low, 0V (LED off)  
+        delay.delay_ms(500);    
     }
 }
