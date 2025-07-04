@@ -51,6 +51,15 @@ fn main() -> ! {
     // Use ARM System Timer (SYST) for delays, "how many ticks is 1 ms"
     let mut delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.freq().to_Hz());
 
+    // GPIO pin setup
+    let sio = Sio::new(pac.SIO); // single-cycle IO (fastest refresh of pin states in 1 clock cycle)
+    let pins = hal::gpio::Pins::new(
+        pac.IO_BANK0, // pins for config
+        pac.PADS_BANK0, // rest of the pins
+        sio.gpio_bank0, // SIO (RP2040 feature)
+        &mut pac.RESETS, // "mutable reference to the reset controller"
+        &mut watchdog, // pass the watchdog to reset if needed
+    );
 
     loop {
         //forever
