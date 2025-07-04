@@ -7,6 +7,9 @@ edition = "2025"
 panic-halt = "0.2"
 cortex-m-rt = "0.7" # Runtime for ARM Cortex-M
 rp2040-boot2 = "0.3"  # RP2040 bootloader
+rp2040-hal = "0.9"  # Hardware Abstraction Layer (HAL) for RP2040
+embedded-hal = "0.2"  # Hardware Abstraction Layer (HAL) for General Embedded Systems
+cortex-m = "0.7"  # ARM Cortex-M stuff
 
 # Abort on panic instead of trying to "unwind"
 [profile.dev]
