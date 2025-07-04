@@ -1,3 +1,4 @@
+// #[] gives information to the compiler
 #![no_std]
 #![no_main]
 
@@ -9,10 +10,14 @@ use panic_halt as _;
 //This macro knows how to properly set up an ARM Cortex-M program.
 use cortex_m_rt::entry;
 
-// Import the bootloader for RP2040
-#[link_section = ".boot2"]
-#[used]
-pub static BOOT2: [u8; 256] = rp2040_boot2::BOOT_LOADER_GENERIC_03H;
+// hardware access
+use cortex_m_rt::entry;
+use rp2040_hal as hal;
+
+// Sets up the bootloader for the RP2040, 256 bytes in "boot2" section
+#[unsafe(link_section = ".boot2")]
+#[used] // keep this section, even if unused
+pub static BOOT2: [u8; 256] = rp2040_boot2::BOOT_LOADER_GENERIC_03H; // import the bootloader from the rp2040-boot2 crate
 
 // main loop & ! means this function never returns
 //#[no_mangle no mangling (changing) of the function name
