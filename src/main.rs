@@ -12,6 +12,7 @@ use cortex_m_rt::entry;
 
 // hardware access
 use rp2040_hal as hal;
+use embedded_hal::digital::v2::OutputPin;
 use hal::{
     clocks::{init_clocks_and_plls, Clock}, //clock configurations
     pac,  // Peripheral Access Crate, "raw hardware access"
@@ -39,13 +40,14 @@ fn main() -> ! {
 
     // Setup clocks and PLLs (Phase-Locked Loops)
     let clocks = init_clocks_and_plls(
+        12_000_000u32,  // 12MHz crystal frequency - ADD THIS LINE
         pac.XOSC,
         pac.CLOCKS,
         pac.PLL_SYS,
         pac.PLL_USB,
         &mut pac.RESETS,
         &mut watchdog,
-    ).ok.unwrap(); // ok() converts Result<Clocks, Error> to Option
+    ).ok().unwrap(); // ok() converts Result<Clocks, Error> to Option
     // Option is an enum that can be Some(value) or None
 
     // Use ARM System Timer (SYST) for delays, "how many ticks is 1 ms"
@@ -58,7 +60,6 @@ fn main() -> ! {
         pac.PADS_BANK0, // rest of the pins
         sio.gpio_bank0, // SIO (RP2040 feature)
         &mut pac.RESETS, // "mutable reference to the reset controller"
-        &mut watchdog, // pass the watchdog to reset if needed
     );
 
     // Configure GPIO pin 1 as a push-pull output (for an LED)
