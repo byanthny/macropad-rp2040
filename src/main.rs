@@ -33,6 +33,25 @@ fn main() -> ! {
     let mut pac = pac::Peripherals::take().unwrap(); // take ownership of the peripherals (RP2040 hardware)
     let core = cortex_m::Peripherals::take().unwrap(); // take ownership of the core peripherals (Cortex-M hardware)
 
+    // Setup watchdog to reset if the program hangs
+    // Assumes program crashed if not "reset"
+    let mut watchdog = Watchdog::new(pac.WATCHDOG);
+
+    // Setup clocks and PLLs (Phase-Locked Loops)
+    let clocks = init_clocks_and_plls(
+        pac.XOSC,
+        pac.CLOCKS,
+        pac.PLL_SYS,
+        pac.PLL_USB,
+        &mut pac.RESETS,
+        &mut watchdog,
+    ).ok.unwrap(); // ok() converts Result<Clocks, Error> to Option
+    // Option is an enum that can be Some(value) or None
+
+    // Use ARM System Timer (SYST) for delays, "how many ticks is 1 ms"
+    let mut delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.freq().to_Hz());
+
+
     loop {
         //forever
     }
