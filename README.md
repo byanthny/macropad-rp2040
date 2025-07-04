@@ -49,3 +49,4 @@ Copy `code.py` and `/lib` to root of macropad, see tutorial for more info.
 - [CircuitPython Docs](https://docs.circuitpython.org/en/latest/README.html)
 - [Macropad Hotkeys Project Guide](https://learn.adafruit.com/macropad-hotkeys)
 - [RP2040 MacOS Ventura Issue](https://www.raspberrypi.com/news/the-ventura-problem/)
+- [Datasheet](https://github.com/adafruit/Adafruit-MacroPad-RP2040-PCB/blob/fdd7f2cb3bc2b3c7a9c0765780387647ea872141/Adafruit%20MacroPad%20RP2040%20Pinout.pdf)
