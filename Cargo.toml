@@ -1,6 +1,16 @@
 [package]
 name = "macropad-rp2040"
 version = "0.1.0"
-edition = "2024"
+edition = "2025"
 
 [dependencies]
+panic-halt = "0.2"
+cortex-m-rt = "0.7" # Runtime for ARM Cortex-M
+rp2040-boot2 = "0.3"  # RP2040 bootloader
+
+# Abort on panic instead of trying to "unwind"
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
