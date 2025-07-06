@@ -1,7 +1,8 @@
 /res
-
-# Added by cargo
-
 /target
+*.uf2
+*.swp
+*.swo
+*~
 
 .DS_Store
