@@ -1,19 +1,32 @@
 # RP2040 Macropad w/ Rust (Adafruit Kit) [use at your own risk]
 
-my code (and future libraries) for custom macropad built with adafruit macropad rp2040 kit and rust.
+my code (and future libraries) for custom macropad built with adafruit macropad rp2040 kit
 
-## Config
+## Setup
 
-coming soon
+...rust setup
+
+1. Build project with:
+
+```bash
+cargo build
+```
+
+2. Put the RP2040 into bootloader mode.
+3. Flash macropad with:
+
+```bash
+cargo run --release
+```
 
 ## Features
 
-## Rotary Encoder
+### Rotary Encoder
 
 - Encoder: Volume Control
 - Switch: Toggle between brightness modes
 
-## Keys
+### Keys
 
 0. Discord Mute (Custom keybind, bug with discord repeating keys)
 1. Pause/Play
@@ -23,16 +36,17 @@ coming soon
 
 ## TODO (no order)
 
-- [ ] Rust
+- [ ] Reintroduce previous features
+- [ ] Clean up project
 
 ## Bugs
+
+- later issue
 
 # Resources
 
 - [Adafruit Macropad RP2040 Guide](https://learn.adafruit.com/adafruit-macropad-rp2040)
-- [Adafruit MacroPad RP2040 Helper Library Docs](https://docs.circuitpython.org/projects/macropad/en/latest/index.html)
-- [Macropad Hotkeys Project Guide](https://learn.adafruit.com/macropad-hotkeys)
-- [RP2040 MacOS Ventura Issue](https://www.raspberrypi.com/news/the-ventura-problem/)
 - [Adafruit MacroPad Datasheet](https://github.com/adafruit/Adafruit-MacroPad-RP2040-PCB/blob/fdd7f2cb3bc2b3c7a9c0765780387647ea872141/Adafruit%20MacroPad%20RP2040%20Pinout.pdf)
 - [RP2040 HAL Template (pins are different used for setup)](https://github.com/rp-rs/rp2040-project-template)
-- [](https://lib.rs/crates/adafruit-macropad)
+- [Adafruit Macropad BSP](https://lib.rs/crates/adafruit-macropad)
+- [BSP LED Blink Example](https://github.com/rp-rs/rp-hal-boards/blob/56e044061073fb49aef93984b629af5c5bc1a11c/boards/adafruit-macropad/examples/adafruit-macropad_blinky.rs)
