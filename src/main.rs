@@ -11,20 +11,16 @@ use panic_halt as _;
 use cortex_m_rt::entry;
 
 // hardware access
-use rp2040_hal as hal;
 use embedded_hal::digital::OutputPin;
-use hal::{
-    clocks::{init_clocks_and_plls, Clock}, //clock configurations
-    gpio,  // GPIO pin access
-    pac,  // Peripheral Access Crate, "raw hardware access"
-    sio::Sio,  // GPIO
-    watchdog::Watchdog,
+use adafruit_macropad::{
+    hal::{
+        clocks::{init_clocks_and_plls, Clock},
+        pac,
+        watchdog::Watchdog,
+        Sio,
+    },
+    Pins, XOSC_CRYSTAL_FREQ,
 };
-
-// Sets up the bootloader for the RP2040, 256 bytes in "boot2" section
-#[unsafe(link_section = ".boot2")]
-#[used] // keep this section, even if unused
-pub static BOOT2: [u8; 256] = rp2040_boot2::BOOT_LOADER_GENERIC_03H; // import the bootloader from the rp2040-boot2 crate
 
 // main loop & ! means this function never returns
 //#[no_mangle no mangling (changing) of the function name
@@ -41,7 +37,7 @@ fn main() -> ! {
 
     // Setup clocks and PLLs (Phase-Locked Loops)
     let clocks = init_clocks_and_plls(
-        12_000_000u32, // 12 MHz external crystal frequency
+        XOSC_CRYSTAL_FREQ, // 12 MHz external crystal frequency
         pac.XOSC,
         pac.CLOCKS,
         pac.PLL_SYS,
@@ -56,7 +52,7 @@ fn main() -> ! {
 
     // GPIO pin setup
     let sio = Sio::new(pac.SIO); // single-cycle IO (fastest refresh of pin states in 1 clock cycle)
-    let pins = gpio::Pins::new(
+    let pins = Pins::new(
         pac.IO_BANK0, // pins for config
         pac.PADS_BANK0, // rest of the pins
         sio.gpio_bank0, // SIO (RP2040 feature)
@@ -64,7 +60,7 @@ fn main() -> ! {
     );
 
     // Configure the built-in LED pin as output
-    let mut led_pin = pins.gpio13.into_push_pull_output();
+    let mut led_pin = pins.led.into_push_pull_output();
 
     // Flashes the LED on and off every 500ms
     loop {
