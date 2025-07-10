@@ -12,6 +12,7 @@ use cortex_m_rt::entry;
 
 // hardware access
 use embedded_hal::digital::OutputPin;
+use embedded_hal::digital::InputPin;
 use adafruit_macropad::{
     hal::{
         clocks::{init_clocks_and_plls, Clock},
@@ -62,11 +63,17 @@ fn main() -> ! {
     // Configure the built-in LED pin as output
     let mut led_pin = pins.led.into_push_pull_output();
 
-    // Flashes the LED on and off every 500ms
+    // Configure key 1 as input
+    let mut key1 = pins.key1.into_pull_up_input();
+
+    // Turns on the LED pin when first key is pressed
     loop {
-        led_pin.set_high().unwrap();
-        delay.delay_ms(500);
-        led_pin.set_low().unwrap();
-        delay.delay_ms(500);
+        if key1.is_low().unwrap() { //Check if key1 is pressed (low state)
+            led_pin.set_high().unwrap(); //Turn on LED
+        } 
+        else {  //Do opposite if key1 is not pressed
+            led_pin.set_low().unwrap();
+        }
+        delay.delay_ms(10);
     }
 }
