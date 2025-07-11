@@ -45,6 +45,7 @@ cargo run --release
 
 # Resources
 
+- [Docs.rs](https://docs.rs/)
 - [Adafruit Macropad RP2040 Guide](https://learn.adafruit.com/adafruit-macropad-rp2040)
 - [Adafruit MacroPad Datasheet](https://github.com/adafruit/Adafruit-MacroPad-RP2040-PCB/blob/fdd7f2cb3bc2b3c7a9c0765780387647ea872141/Adafruit%20MacroPad%20RP2040%20Pinout.pdf)
 - [RP2040 HAL Template (pins are different used for setup)](https://github.com/rp-rs/rp2040-project-template)
