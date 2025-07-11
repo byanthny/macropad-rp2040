@@ -6,12 +6,20 @@ edition = "2024"
 [dependencies]
 panic-halt = "0.2"
 cortex-m-rt = "0.7" # Runtime for ARM Cortex-M
+cortex-m = "0.7"  # ARM Cortex-M stuff
+
+#Hardware Access
 rp2040-hal = { version="0.11", features=["rt", "critical-section-impl"] } # Hardware Abstraction Layer (HAL) for RP2040
 rp2040-boot2 = "0.3"  # RP2040 bootloader
 embedded-hal = { version = "1.0.0" }  # Hardware Abstraction Layer (HAL) for General Embedded Systems
-cortex-m = "0.7"  # ARM Cortex-M stuff
-adafruit-macropad = "*"
+
+#BSP
+#adafruit-macropad = "*"
 #ws2812-pio = "0.3.0"
+
+#USB HID
+usbd-hid = "0.6"
+usb-device = "0.2"
 
 # Abort on panic instead of trying to "unwind"
 [profile.dev]
