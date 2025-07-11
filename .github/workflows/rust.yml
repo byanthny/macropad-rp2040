@@ -18,5 +18,7 @@ jobs:
     - uses: actions/checkout@v4
     - name: Install thumbv6m-none-eabi target
       run: rustup target add thumbv6m-none-eabi
+    - name: Install flip-link
+      run: cargo install flip-link
     - name: Build
       run: cargo build --verbose
