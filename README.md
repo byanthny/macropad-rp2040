@@ -38,6 +38,7 @@ cargo run --release
 
 - [ ] Reintroduce previous features
 - [ ] Clean up project
+- [ ] Use Enums or Trait Objects
 
 ## Bugs
 

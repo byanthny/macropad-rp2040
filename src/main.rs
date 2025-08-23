@@ -63,15 +63,30 @@ fn main() -> ! {
     // Configure the built-in LED pin as output
     let mut led_pin = pins.led.into_push_pull_output();
 
-    // Configure key 1 as input
+    // Configure first 6 keys as input
     let mut key1 = pins.key1.into_pull_up_input();
+    let mut key2 = pins.key2.into_pull_up_input();
+    let mut key3 = pins.key3.into_pull_up_input();
+    let mut key4 = pins.key4.into_pull_up_input();
+    let mut key5 = pins.key5.into_pull_up_input();
+    let mut key6 = pins.key6.into_pull_up_input();
 
-    // Turns on the LED pin when first key is pressed
+    // Turns on the LED pin when key is pressed
     loop {
         if key1.is_low().unwrap() { //Check if key1 is pressed (low state)
             led_pin.set_high().unwrap(); //Turn on LED
-        } 
-        else {  //Do opposite if key1 is not pressed
+        }  else if key2.is_low().unwrap() {
+            led_pin.set_high().unwrap();
+        } else if key3.is_low().unwrap() {
+            led_pin.set_high().unwrap();
+        } else if key4.is_low().unwrap() {
+            led_pin.set_high().unwrap();
+        } else if key5.is_low().unwrap() {
+            led_pin.set_high().unwrap();
+        } else if key6.is_low().unwrap() {
+            led_pin.set_high().unwrap();
+        }
+        else {  //Do opposite if key 1-6 is not pressed
             led_pin.set_low().unwrap();
         }
         delay.delay_ms(10);
