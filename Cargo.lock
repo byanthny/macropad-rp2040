@@ -3,6 +3,17 @@
 version = 4
 
 [[package]]
+name = "adafruit-macropad"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7902bc5085ae127213990ec7d27f5c1c316a303fa35abfeab20a102b6b4449a1"
+dependencies = [
+ "cortex-m-rt",
+ "rp2040-boot2",
+ "rp2040-hal 0.10.2",
+]
+
+[[package]]
 name = "arrayvec"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -236,12 +247,13 @@ dependencies = [
 name = "macropad-rp2040"
 version = "0.1.0"
 dependencies = [
+ "adafruit-macropad",
  "cortex-m",
  "cortex-m-rt",
  "embedded-hal 1.0.0",
  "panic-halt",
  "rp2040-boot2",
- "rp2040-hal",
+ "rp2040-hal 0.11.0",
  "usb-device 0.2.9",
  "usbd-hid",
 ]
@@ -356,6 +368,35 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c92f344f63f950ee36cf4080050e4dce850839b9175da38f9d2ffb69b4dbb21"
 dependencies = [
  "crc-any",
+]
+
+[[package]]
+name = "rp2040-hal"
+version = "0.10.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d11e711940087f2cdff8aeae9f4b902e2014c06a00b39a1092686b81ec973d6f"
+dependencies = [
+ "bitfield 0.14.0",
+ "cortex-m",
+ "critical-section",
+ "embedded-dma",
+ "embedded-hal 0.2.7",
+ "embedded-hal 1.0.0",
+ "embedded-hal-async",
+ "embedded-hal-nb",
+ "embedded-io",
+ "frunk",
+ "fugit",
+ "itertools",
+ "nb 1.1.0",
+ "paste",
+ "pio",
+ "rand_core",
+ "rp2040-hal-macros",
+ "rp2040-pac",
+ "usb-device 0.3.2",
+ "vcell",
+ "void",
 ]
 
 [[package]]
