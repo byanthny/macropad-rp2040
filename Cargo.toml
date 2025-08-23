@@ -14,7 +14,7 @@ rp2040-boot2 = "0.3"  # RP2040 bootloader
 embedded-hal = { version = "1.0.0" }  # Hardware Abstraction Layer (HAL) for General Embedded Systems
 
 #BSP
-#adafruit-macropad = "*"
+adafruit-macropad = "*"
 #ws2812-pio = "0.3.0"
 
 #USB HID
