@@ -23,26 +23,27 @@ cargo run --release
 
 ### Rotary Encoder
 
-- Encoder: Volume Control
-- Switch: Toggle between brightness modes
+- Encoder: Volume Control [not implemented]
+- Switch: Toggle between brightness modes [not implemented]
 
 ### Keys
 
-0. Discord Mute (Custom keybind, bug with discord repeating keys)
-1. Pause/Play
-2. Skip Track
-3. Screenshot Entire Screen(s) - Command + Shift + 3
-4. Screenshot Selection of Screen - Command + Shift + 4
+0. Discord Mute (Custom keybind, bug with discord repeating keys) [not implemented]
+1. Pause/Play [not implemented]
+2. Skip Track [not implemented]
+3. Screenshot Entire Screen(s) - Command + Shift + 3 [not implemented]
+4. Screenshot Selection of Screen - Command + Shift + 4 [not implemented]
 
 ## TODO (no order)
 
 - [ ] Reintroduce previous features
 - [ ] Clean up project
 - [ ] Use Enums or Trait Objects
+- [ ] Figure out useful keys
 
-## Bugs
+## Notes & Bugs
 
-- later issue
+- usbd_hid crate was giving me issues with keyboard input not being recognized, used usbd-human-interface-device instead
 
 # Resources
 
@@ -52,3 +53,4 @@ cargo run --release
 - [RP2040 HAL Template (pins are different used for setup)](https://github.com/rp-rs/rp2040-project-template)
 - [Adafruit Macropad BSP](https://lib.rs/crates/adafruit-macropad)
 - [BSP LED Blink Example](https://github.com/rp-rs/rp-hal-boards/blob/56e044061073fb49aef93984b629af5c5bc1a11c/boards/adafruit-macropad/examples/adafruit-macropad_blinky.rs)
+- [usbd-human-interface-device](https://docs.rs/usbd-human-interface-device/)
