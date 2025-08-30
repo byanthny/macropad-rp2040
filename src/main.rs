@@ -11,17 +11,22 @@ use panic_halt as _;
 use cortex_m_rt::entry;
 
 // hardware access
-use embedded_hal::digital::OutputPin;
-use embedded_hal::digital::InputPin;
+use embedded_hal::digital::{InputPin, OutputPin};
 use adafruit_macropad::{
     hal::{
         clocks::{init_clocks_and_plls, Clock},
         pac,
         watchdog::Watchdog,
         Sio,
+        usb::UsbBus,
     },
     Pins, XOSC_CRYSTAL_FREQ,
 };
+
+// USB HID imports
+use usb_device::{prelude::*, class_prelude::*};
+use usbd_human_interface_device::{prelude::*, page::{Keyboard}, device::{keyboard::{NKROBootKeyboardConfig, NKROBootKeyboard}, consumer::{ConsumerControlConfig}}};
+
 
 // main loop & ! means this function never returns
 //#[no_mangle no mangling (changing) of the function name
@@ -63,32 +68,78 @@ fn main() -> ! {
     // Configure the built-in LED pin as output
     let mut led_pin = pins.led.into_push_pull_output();
 
-    // Configure first 6 keys as input
+    // Configure all 12 keys as input
     let mut key1 = pins.key1.into_pull_up_input();
     let mut key2 = pins.key2.into_pull_up_input();
     let mut key3 = pins.key3.into_pull_up_input();
     let mut key4 = pins.key4.into_pull_up_input();
     let mut key5 = pins.key5.into_pull_up_input();
     let mut key6 = pins.key6.into_pull_up_input();
+    let mut key7 = pins.key7.into_pull_up_input();
+    let mut key8 = pins.key8.into_pull_up_input();
+    let mut key9 = pins.key9.into_pull_up_input();
+    let mut key10 = pins.key10.into_pull_up_input();
+    let mut key11 = pins.key11.into_pull_up_input();
+    let mut key12 = pins.key12.into_pull_up_input();
+
+    // Initialize USB bus
+    let usb_bus = UsbBusAllocator::new(UsbBus::new(
+        pac.USBCTRL_REGS, //usb controller register on the rp2040
+        pac.USBCTRL_DPRAM, //usb ram
+        clocks.usb_clock,
+        true,
+        &mut pac.RESETS, 
+    ));
+
+    // Create HID devices
+    let mut hid = UsbHidClassBuilder::new()
+        .add_device(NKROBootKeyboardConfig::default()) // N-Key Rollover Boot Keyboard
+        .add_device(ConsumerControlConfig::default())
+        .build(&usb_bus);
+
+    // Create USB device
+    let mut usb_dev = UsbDeviceBuilder::new(&usb_bus, UsbVidPid(0x1209, 0x0001)) //(vendor id, product id) 0x1209 is for open-source projects
+        .strings(&[StringDescriptors::default()
+            .manufacturer("byanthny")
+            .product("Adafruit MacroPad")
+            .serial_number("00001")]).unwrap()
+        .device_class(0)
+        .build();
+
+    let mut last_tick = 0u32; //set unsigned 32-bit integer for last tick
 
     // Turns on the LED pin when key is pressed
     loop {
-        if key1.is_low().unwrap() { //Check if key1 is pressed (low state)
-            led_pin.set_high().unwrap(); //Turn on LED
-        }  else if key2.is_low().unwrap() {
-            led_pin.set_high().unwrap();
-        } else if key3.is_low().unwrap() {
-            led_pin.set_high().unwrap();
-        } else if key4.is_low().unwrap() {
-            led_pin.set_high().unwrap();
-        } else if key5.is_low().unwrap() {
-            led_pin.set_high().unwrap();
-        } else if key6.is_low().unwrap() {
-            led_pin.set_high().unwrap();
+
+        //usb polling
+        let _ = usb_dev.poll(&mut [&mut hid]);
+
+        //tick about every 1ms? check math, idle rate compliance -> look into HID compliance more
+        last_tick += 1;
+        if last_tick >= 1000 {
+            last_tick = 0;
+            hid.tick().unwrap();
         }
-        else {  //Do opposite if key 1-6 is not pressed
+
+        // Read key states
+        let key1_pressed = key1.is_low().unwrap();
+        let key2_pressed = key2.is_low().unwrap();
+
+        // key pressed?
+        if key1_pressed {
+            led_pin.set_high().unwrap(); // Turn on LED
+            hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::A]).ok(); // Send 'A' key press
+        } else if key2_pressed {
+            led_pin.set_high().unwrap();
+            hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::B]).ok(); // Send 'B' key press
+        } else {
+            //No key pressed or released, turn off LED, send NoEventIndicated
             led_pin.set_low().unwrap();
+            hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::NoEventIndicated]).ok();
         }
-        delay.delay_ms(10);
+        
+        delay.delay_us(100); // delay
     }
 }
+
+
