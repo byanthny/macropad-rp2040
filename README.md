@@ -1,6 +1,6 @@
 # RP2040 Macropad w/ Rust (Adafruit Kit) [use at your own risk]
 
-my code (and future libraries) for custom macropad built with adafruit macropad rp2040 kit
+adafruit macropad rp2040 kit programmed with rust
 
 ## Setup
 
@@ -28,18 +28,24 @@ cargo run --release
 
 ### Keys
 
-0. Discord Mute (Custom keybind, bug with discord repeating keys) [not implemented]
-1. Pause/Play [implemented]
-2. Skip Track [not implemented]
-3. Screenshot Entire Screen(s) - Command + Shift + 3 [not implemented]
-4. Screenshot Selection of Screen - Command + Shift + 4 [not implemented]
+1. A
+2. Pause/Play
+3. 
+4. 
+5. 
+6. 
+7. 
+8. 
+9. 
+10. 
+11. 
+12. 
 
 ## TODO (no order)
 
-- [ ] Reintroduce previous features
+- [ ] ~~Reintroduce previous features~~ Figure out useful keys
 - [ ] Clean up project
 - [ ] Use Enums or Trait Objects
-- [ ] Figure out useful keys
 
 ## Notes & Bugs
 
