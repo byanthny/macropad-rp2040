@@ -125,6 +125,15 @@ fn main() -> ! {
         let key1_pressed = key1.is_low().unwrap();
         let key2_pressed = key2.is_low().unwrap();
         let key3_pressed = key3.is_low().unwrap();
+        let key4_pressed = key4.is_low().unwrap();
+        let key5_pressed = key5.is_low().unwrap();
+        let key6_pressed = key6.is_low().unwrap();
+        let key7_pressed = key7.is_low().unwrap();
+        let key8_pressed = key8.is_low().unwrap();
+        let key9_pressed = key9.is_low().unwrap();
+        let key10_pressed = key10.is_low().unwrap();
+        let key11_pressed = key11.is_low().unwrap();
+        let key12_pressed = key12.is_low().unwrap();
 
         // key pressed?
         if key1_pressed {
@@ -140,7 +149,6 @@ fn main() -> ! {
             hid.device::<ConsumerControl<_>, _>().write_report(&MultipleConsumerReport {
                 codes: [Consumer::ScanNextTrack, Consumer::Unassigned, Consumer::Unassigned, Consumer::Unassigned]
             }).ok(); //skip
-
         } else {
             //No key pressed or released, turn off LED, release keys and media controls
             led_pin.set_low().unwrap();
