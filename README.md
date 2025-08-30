@@ -29,7 +29,7 @@ cargo run --release
 ### Keys
 
 0. Discord Mute (Custom keybind, bug with discord repeating keys) [not implemented]
-1. Pause/Play [not implemented]
+1. Pause/Play [implemented]
 2. Skip Track [not implemented]
 3. Screenshot Entire Screen(s) - Command + Shift + 3 [not implemented]
 4. Screenshot Selection of Screen - Command + Shift + 4 [not implemented]

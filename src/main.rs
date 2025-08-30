@@ -25,7 +25,7 @@ use adafruit_macropad::{
 
 // USB HID imports
 use usb_device::{prelude::*, class_prelude::*};
-use usbd_human_interface_device::{prelude::*, page::{Keyboard}, device::{keyboard::{NKROBootKeyboardConfig, NKROBootKeyboard}, consumer::{ConsumerControlConfig}}};
+use usbd_human_interface_device::{prelude::*, page::{Keyboard, Consumer}, device::{keyboard::{NKROBootKeyboardConfig, NKROBootKeyboard}, consumer::{ConsumerControlConfig, ConsumerControl, MultipleConsumerReport}}}; //MultipleConsumerReport has 4 consumer control codes
 
 
 // main loop & ! means this function never returns
@@ -94,7 +94,7 @@ fn main() -> ! {
     // Create HID devices
     let mut hid = UsbHidClassBuilder::new()
         .add_device(NKROBootKeyboardConfig::default()) // N-Key Rollover Boot Keyboard
-        .add_device(ConsumerControlConfig::default())
+        .add_device(ConsumerControlConfig::default()) // For media controls
         .build(&usb_bus);
 
     // Create USB device
@@ -131,11 +131,14 @@ fn main() -> ! {
             hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::A]).ok(); // Send 'A' key press
         } else if key2_pressed {
             led_pin.set_high().unwrap();
-            hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::B]).ok(); // Send 'B' key press
+            hid.device::<ConsumerControl<_>, _>().write_report(&MultipleConsumerReport {
+                codes: [Consumer::PlayPause, Consumer::Unassigned, Consumer::Unassigned, Consumer::Unassigned]
+            }).ok(); //pause/play
         } else {
-            //No key pressed or released, turn off LED, send NoEventIndicated
+            //No key pressed or released, turn off LED, release keys and media controls
             led_pin.set_low().unwrap();
             hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::NoEventIndicated]).ok();
+            hid.device::<ConsumerControl<_>, _>().write_report(&MultipleConsumerReport { codes: [Consumer::Unassigned, Consumer::Unassigned, Consumer::Unassigned, Consumer::Unassigned]}).ok();
         }
         
         delay.delay_us(100); // delay
