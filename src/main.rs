@@ -124,6 +124,7 @@ fn main() -> ! {
         // Read key states
         let key1_pressed = key1.is_low().unwrap();
         let key2_pressed = key2.is_low().unwrap();
+        let key3_pressed = key3.is_low().unwrap();
 
         // key pressed?
         if key1_pressed {
@@ -134,6 +135,12 @@ fn main() -> ! {
             hid.device::<ConsumerControl<_>, _>().write_report(&MultipleConsumerReport {
                 codes: [Consumer::PlayPause, Consumer::Unassigned, Consumer::Unassigned, Consumer::Unassigned]
             }).ok(); //pause/play
+        } else if key3_pressed {
+            led_pin.set_high().unwrap();
+            hid.device::<ConsumerControl<_>, _>().write_report(&MultipleConsumerReport {
+                codes: [Consumer::ScanNextTrack, Consumer::Unassigned, Consumer::Unassigned, Consumer::Unassigned]
+            }).ok(); //skip
+
         } else {
             //No key pressed or released, turn off LED, release keys and media controls
             led_pin.set_low().unwrap();
