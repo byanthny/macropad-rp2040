@@ -18,8 +18,8 @@ adafruit-macropad = "*"
 #ws2812-pio = "0.3.0"
 
 #USB HID
-usbd-hid = "0.6"
-usb-device = "0.2"
+usbd-human-interface-device = "0.6.0"
+usb-device = "0.3"
 
 # Abort on panic instead of trying to "unwind"
 [profile.dev]
