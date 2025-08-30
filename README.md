@@ -48,6 +48,7 @@ cargo run --release
 - [ ] Add LED support
 - [ ] Add OLED display support
 - [ ] Explore profiles and switching key mappings
+- [ ] LED effects
 - [ ] Clean up project
 - [ ] Use Enums or Trait Objects
 
