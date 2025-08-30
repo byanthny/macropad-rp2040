@@ -149,6 +149,17 @@ fn main() -> ! {
             hid.device::<ConsumerControl<_>, _>().write_report(&MultipleConsumerReport {
                 codes: [Consumer::ScanNextTrack, Consumer::Unassigned, Consumer::Unassigned, Consumer::Unassigned]
             }).ok(); //skip
+        }
+        //lightroom commands 
+        else if key4_pressed {
+            led_pin.set_high().unwrap();
+            hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::X]).ok(); // X, reject
+        } else if key5_pressed {
+            led_pin.set_high().unwrap();
+            hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::U]).ok(); // U, unflagged
+        } else if key6_pressed {
+            led_pin.set_high().unwrap();
+            hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::P]).ok(); // P, pick
         } else {
             //No key pressed or released, turn off LED, release keys and media controls
             led_pin.set_low().unwrap();
