@@ -44,6 +44,10 @@ cargo run --release
 ## TODO (no order)
 
 - [ ] ~~Reintroduce previous features~~ Figure out useful keys
+- [ ] Add rotary encoder functionality
+- [ ] Add LED support
+- [ ] Add OLED display support
+- [ ] Explore profiles and switching key mappings
 - [ ] Clean up project
 - [ ] Use Enums or Trait Objects
 
