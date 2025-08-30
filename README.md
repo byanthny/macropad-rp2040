@@ -30,16 +30,16 @@ cargo run --release
 
 1. A
 2. Pause/Play
-3. 
-4. 
-5. 
-6. 
-7. 
-8. 
-9. 
-10. 
-11. 
-12. 
+3. Skip
+4. Reject (lightroom)
+5. Unflagged (lightroom)
+6. Pick (lightroom)
+7.
+8.
+9.
+10.
+11.
+12.
 
 ## TODO (no order)
 
