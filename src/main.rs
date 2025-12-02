@@ -19,6 +19,7 @@ use adafruit_macropad::{
         watchdog::Watchdog,
         Sio,
         usb::UsbBus,
+        pio::PIOExt,
     },
     Pins, XOSC_CRYSTAL_FREQ,
 };
@@ -27,10 +28,33 @@ use adafruit_macropad::{
 use usb_device::{prelude::*, class_prelude::*};
 use usbd_human_interface_device::{prelude::*, page::{Keyboard, Consumer}, device::{keyboard::{NKROBootKeyboardConfig, NKROBootKeyboard}, consumer::{ConsumerControlConfig, ConsumerControl, MultipleConsumerReport}}}; //MultipleConsumerReport has 4 consumer control codes
 
+// NeoPixel LED imports
+use smart_leds::RGB8;
+use adafruit_macropad::hal::pio::{PIOBuilder, Tx, ValidStateMachine};
+use adafruit_macropad::hal::gpio::FunctionPio0;
+
+// Simple WS2812 driver using PIO
+struct Ws2812<SM: ValidStateMachine> {
+    tx: Tx<SM>,
+}
+
+impl<SM: ValidStateMachine> Ws2812<SM> {
+    fn write_leds(&mut self, leds: &[RGB8]) {
+        for led in leds {
+            // WS2812 expects GRB format, send each byte separately
+            // Green byte
+            while !self.tx.write((led.g as u32) << 24) {}
+            // Red byte
+            while !self.tx.write((led.r as u32) << 24) {}
+            // Blue byte
+            while !self.tx.write((led.b as u32) << 24) {}
+        }
+    }
+}
 
 // main loop & ! means this function never returns
 //#[no_mangle no mangling (changing) of the function name
-#[entry] 
+#[entry]
 fn main() -> ! {
     //info!("Program start");
     // take() takes ownership and unwrap() unwraps the result, panicking if in use already
@@ -106,6 +130,55 @@ fn main() -> ! {
         .device_class(0)
         .build();
 
+    // Initialize NeoPixels using PIO
+    let (mut pio, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
+
+    // WS2812 PIO program (simplified version)
+    let ws2812_program = pio_proc::pio_asm!(
+        ".side_set 1"
+        ".wrap_target"
+        "bitloop:"
+        "    out x, 1       side 0 [2]"
+        "    jmp !x do_zero side 1 [1]"
+        "do_one:"
+        "    jmp bitloop side 1 [4]"
+        "do_zero:"
+        "    nop            side 0 [4]"
+        ".wrap"
+    );
+
+    let installed = pio.install(&ws2812_program.program).unwrap();
+
+    // Calculate clock divisor for WS2812 timing
+    // System clock is 125MHz, we need 800kHz * 10 cycles = 8MHz for PIO
+    // 125MHz / 8MHz = 15.625
+    let (mut sm, _, tx) = PIOBuilder::from_installed_program(installed)
+        .side_set_pin_base(pins.neopixel.id().num)
+        .out_shift_direction(adafruit_macropad::hal::pio::ShiftDirection::Left)
+        .autopull(true)
+        .pull_threshold(8) // 8 bits per color channel
+        .clock_divisor_fixed_point(15, 160) // 15.625 divisor for proper WS2812 timing
+        .build(sm0);
+
+    sm.set_pindirs([(pins.neopixel.id().num, adafruit_macropad::hal::pio::PinDir::Output)]);
+    let _neopixel_pin = pins.neopixel.into_function::<FunctionPio0>();
+    sm.start();
+
+    let mut ws2812 = Ws2812 { tx };
+
+    // Define colors
+    let warm_white = RGB8::new(255, 200, 120); // Warm white color
+    let key_press_color = RGB8::new(0, 255, 100); // Cyan/green for key press
+
+    // Initialize LED array - all LEDs start as warm white
+    let mut leds = [warm_white; 12];
+
+    // Set initial LED state
+    ws2812.write_leds(&leds);
+
+    // Wait for LEDs to latch (>50us reset time for WS2812)
+    delay.delay_us(100);
+
     let mut last_tick = 0u32; //set unsigned 32-bit integer for last tick
 
     // Turns on the LED pin when key is pressed
@@ -135,39 +208,59 @@ fn main() -> ! {
         let key11_pressed = key11.is_low().unwrap();
         let key12_pressed = key12.is_low().unwrap();
 
-        // key pressed?
+        // Reset all LEDs to warm white
+        leds = [warm_white; 12];
+
+        // Update LED colors for pressed keys and send key reports
         if key1_pressed {
-            led_pin.set_high().unwrap(); // Turn on LED
-            hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::A]).ok(); // Send 'A' key press
-        } else if key2_pressed {
             led_pin.set_high().unwrap();
+            leds[0] = key_press_color;
+            hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::A]).ok();
+        }
+        if key2_pressed {
+            led_pin.set_high().unwrap();
+            leds[1] = key_press_color;
             hid.device::<ConsumerControl<_>, _>().write_report(&MultipleConsumerReport {
                 codes: [Consumer::PlayPause, Consumer::Unassigned, Consumer::Unassigned, Consumer::Unassigned]
-            }).ok(); //pause/play
-        } else if key3_pressed {
+            }).ok();
+        }
+        if key3_pressed {
             led_pin.set_high().unwrap();
+            leds[2] = key_press_color;
             hid.device::<ConsumerControl<_>, _>().write_report(&MultipleConsumerReport {
                 codes: [Consumer::ScanNextTrack, Consumer::Unassigned, Consumer::Unassigned, Consumer::Unassigned]
-            }).ok(); //skip
+            }).ok();
         }
-        //lightroom commands 
-        else if key4_pressed {
+        if key4_pressed {
             led_pin.set_high().unwrap();
-            hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::X]).ok(); // X, reject
-        } else if key5_pressed {
+            leds[3] = key_press_color;
+            hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::X]).ok();
+        }
+        if key5_pressed {
             led_pin.set_high().unwrap();
-            hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::U]).ok(); // U, unflagged
-        } else if key6_pressed {
+            leds[4] = key_press_color;
+            hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::U]).ok();
+        }
+        if key6_pressed {
             led_pin.set_high().unwrap();
-            hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::P]).ok(); // P, pick
-        } else {
-            //No key pressed or released, turn off LED, release keys and media controls
+            leds[5] = key_press_color;
+            hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::P]).ok();
+        }
+
+        // If no keys pressed, turn off back LED and release all keys
+        if !key1_pressed && !key2_pressed && !key3_pressed && !key4_pressed && !key5_pressed && !key6_pressed {
             led_pin.set_low().unwrap();
             hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::NoEventIndicated]).ok();
-            hid.device::<ConsumerControl<_>, _>().write_report(&MultipleConsumerReport { codes: [Consumer::Unassigned, Consumer::Unassigned, Consumer::Unassigned, Consumer::Unassigned]}).ok();
+            hid.device::<ConsumerControl<_>, _>().write_report(&MultipleConsumerReport {
+                codes: [Consumer::Unassigned, Consumer::Unassigned, Consumer::Unassigned, Consumer::Unassigned]
+            }).ok();
         }
-        
-        delay.delay_us(100); // delay
+
+        // Update NeoPixel LEDs
+        ws2812.write_leds(&leds);
+
+        // Delay to give LEDs time to latch (needs >50μs low signal)
+        delay.delay_us(1000); // 1ms delay
     }
 }
 
