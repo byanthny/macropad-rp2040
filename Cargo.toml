@@ -9,13 +9,15 @@ cortex-m-rt = "0.7" # Runtime for ARM Cortex-M
 cortex-m = "0.7"  # ARM Cortex-M stuff
 
 #Hardware Access
-rp2040-hal = { version="0.11", features=["rt", "critical-section-impl"] } # Hardware Abstraction Layer (HAL) for RP2040
 rp2040-boot2 = "0.3"  # RP2040 bootloader
 embedded-hal = { version = "1.0.0" }  # Hardware Abstraction Layer (HAL) for General Embedded Systems
 
 #BSP
-adafruit-macropad = "*"
-#ws2812-pio = "0.3.0"
+adafruit-macropad = "0.8.0"
+# Use pio directly for NeoPixels to avoid version conflicts
+pio = "0.2"
+pio-proc = "0.2"
+smart-leds = "0.4.0"
 
 #USB HID
 usbd-human-interface-device = "0.6.0"
