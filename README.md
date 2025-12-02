@@ -45,7 +45,7 @@ cargo run --release
 
 - [ ] ~~Reintroduce previous features~~ Figure out useful keys
 - [ ] Add rotary encoder functionality
-- [ ] Add LED support
+- [x] Add LED support
 - [ ] Add OLED display support
 - [ ] Explore profiles and switching key mappings
 - [ ] LED effects
