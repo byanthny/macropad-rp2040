@@ -43,7 +43,8 @@ cargo run --release
 
 ### LEDs
 
-Steady warm white, switching to green under whichever key is held.
+Steady warm white at half brightness, switching to green under whichever key is
+held.
 
 They go dark on their own in two cases:
 
@@ -58,8 +59,10 @@ They go dark on their own in two cases:
 everything else keep working while the pad stays dark, and it survives a
 sleep/wake cycle. Only key 12 turns them back on.
 
-Both transitions fade out over about a second and snap back on instantly.
-Timings live at the top of `src/backlight.rs`.
+Going dark takes about a second. Coming back takes a quarter of that, so the pad
+feels responsive under the hand without the light arriving as a hard snap.
+Interrupting a fade reverses it from wherever it had got to rather than jumping.
+Brightness and both fade times are constants at the top of `src/backlight.rs`.
 
 ## TODO (no order)
 
