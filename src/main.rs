@@ -18,6 +18,7 @@ use adafruit_macropad::{
         pac,
         watchdog::Watchdog,
         Sio,
+        Timer,
         usb::UsbBus,
         pio::PIOExt,
     },
@@ -25,13 +26,26 @@ use adafruit_macropad::{
 };
 
 // USB HID imports
-use usb_device::{prelude::*, class_prelude::*};
+use usb_device::{prelude::*, class_prelude::*, device::UsbDeviceState};
 use usbd_human_interface_device::{prelude::*, page::{Keyboard, Consumer}, device::{keyboard::{NKROBootKeyboardConfig, NKROBootKeyboard}, consumer::{ConsumerControlConfig, ConsumerControl, MultipleConsumerReport}}}; //MultipleConsumerReport has 4 consumer control codes
 
 // NeoPixel LED imports
 use smart_leds::RGB8;
 use adafruit_macropad::hal::pio::{PIOBuilder, Tx, ValidStateMachine};
 use adafruit_macropad::hal::gpio::FunctionPio0;
+
+// Backlight policy: inactivity timeout, host sleep, manual off key
+mod backlight;
+use backlight::Backlight;
+
+/// Ignore further key 12 edges for this long after a toggle.
+/// Models switch contact bounce, so it lives here next to the pin read rather
+/// than inside the backlight state machine.
+const TOGGLE_LOCKOUT_US: u64 = 150_000; // 150ms
+
+/// Rewrite the strip at least this often even when the buffer has not changed,
+/// so a glitched pixel heals itself.
+const LED_REFRESH_US: u64 = 1_000_000; // 1s
 
 // Simple WS2812 driver using PIO
 struct Ws2812<SM: ValidStateMachine> {
@@ -79,6 +93,13 @@ fn main() -> ! {
 
     // Use ARM System Timer (SYST) for delays, "how many ticks is 1 ms"
     let mut delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.freq().to_Hz());
+
+    // Free-running 1MHz microsecond counter, used as the wall clock for the
+    // backlight timeout and the HID tick.
+    // MUST be built before the USB bus below: Timer::new borrows the whole
+    // `clocks`, but UsbBus::new moves `clocks.usb_clock` out of it. Taking the
+    // timer afterwards would be a borrow of a partially moved value.
+    let timer = Timer::new(pac.TIMER, &mut pac.RESETS, &clocks);
 
     // GPIO pin setup
     let sio = Sio::new(pac.SIO); // single-cycle IO (fastest refresh of pin states in 1 clock cycle)
@@ -166,89 +187,114 @@ fn main() -> ! {
 
     let mut ws2812 = Ws2812 { tx };
 
-    // Define colors
-    let warm_white = RGB8::new(255, 200, 120); // Warm white color
-    let key_press_color = RGB8::new(0, 255, 100); // Cyan/green for key press
-
-    // Initialize LED array - all LEDs start as warm white
-    let mut leds = [warm_white; 12];
-
-    // Set initial LED state
-    ws2812.write_leds(&leds);
+    // Drive the strip to a known state, since WS2812 power-on state is undefined
+    let mut backlight = Backlight::new(timer.get_counter().ticks());
+    ws2812.write_leds(&backlight.render(timer.get_counter().ticks(), [false; 12]));
 
     // Wait for LEDs to latch (>50us reset time for WS2812)
     delay.delay_us(100);
 
-    let mut last_tick = 0u32; //set unsigned 32-bit integer for last tick
+    // Loop state. `last_written` starts black, so the first iteration writes the
+    // strip once more than strictly needed - harmless, and cheaper than trying
+    // to keep it in sync with the boot write above.
+    let mut last_written: [RGB8; 12] = [RGB8 { r: 0, g: 0, b: 0 }; 12];
+    let mut last_refresh_us = timer.get_counter().ticks();
+    let mut last_hid_tick_us = timer.get_counter().ticks();
+    let mut key12_was_pressed = false;
+    let mut last_toggle_us = 0u64;
 
     // Turns on the LED pin when key is pressed
     loop {
+        let now = timer.get_counter().ticks();
 
         //usb polling
         let _ = usb_dev.poll(&mut [&mut hid]);
 
-        //tick about every 1ms? check math, idle rate compliance -> look into HID compliance more
-        last_tick += 1;
-        if last_tick >= 1000 {
-            last_tick = 0;
-            hid.tick().unwrap();
+        // hid.tick() wants to be called every 1ms. The old version counted loop
+        // iterations to 1000, but an iteration is ~1.4ms (delay + USB poll +
+        // a blocking 288-bit strip write), so it actually fired every ~1.4s.
+        // .ok() not .unwrap(): at the correct rate a transient error is likely,
+        // and panic_halt here would leave the pad dead until it is replugged.
+        if now.saturating_sub(last_hid_tick_us) >= 1_000 {
+            last_hid_tick_us = now;
+            hid.tick().ok();
         }
 
-        // Read key states
-        let key1_pressed = key1.is_low().unwrap();
-        let key2_pressed = key2.is_low().unwrap();
-        let key3_pressed = key3.is_low().unwrap();
-        let key4_pressed = key4.is_low().unwrap();
-        let key5_pressed = key5.is_low().unwrap();
-        let key6_pressed = key6.is_low().unwrap();
-        let key7_pressed = key7.is_low().unwrap();
-        let key8_pressed = key8.is_low().unwrap();
-        let key9_pressed = key9.is_low().unwrap();
-        let key10_pressed = key10.is_low().unwrap();
-        let key11_pressed = key11.is_low().unwrap();
-        let key12_pressed = key12.is_low().unwrap();
+        // Read every key up front. Keys 7-12 have no HID mapping but still count
+        // as activity, and key 12 drives the backlight toggle.
+        let pressed = [
+            key1.is_low().unwrap(),
+            key2.is_low().unwrap(),
+            key3.is_low().unwrap(),
+            key4.is_low().unwrap(),
+            key5.is_low().unwrap(),
+            key6.is_low().unwrap(),
+            key7.is_low().unwrap(),
+            key8.is_low().unwrap(),
+            key9.is_low().unwrap(),
+            key10.is_low().unwrap(),
+            key11.is_low().unwrap(),
+            key12.is_low().unwrap(),
+        ];
 
-        // Reset all LEDs to warm white
-        leds = [warm_white; 12];
+        // The host tells us when it goes to sleep, which beats waiting out the
+        // inactivity timeout on a PC that went to bed.
+        backlight.set_suspended(usb_dev.state() == UsbDeviceState::Suspend, now);
 
-        // Update LED colors for pressed keys and send key reports
-        if key1_pressed {
+        // Key 12 toggles the backlight. Rising edge only - the loop runs ~700
+        // times a second, so a level check would flip it hundreds of times per
+        // press - plus a lockout to swallow contact bounce.
+        //
+        // MUST run before note_activity(). Reversed, pressing key 12 on a dark
+        // pad would have note_activity() rescue Idle -> On, and then toggle()
+        // would see On and set Off, leaving the pad dark.
+        if pressed[11]
+            && !key12_was_pressed
+            && now.saturating_sub(last_toggle_us) >= TOGGLE_LOCKOUT_US
+        {
+            backlight.toggle(now);
+            last_toggle_us = now;
+        }
+        key12_was_pressed = pressed[11];
+
+        if pressed.iter().any(|&p| p) {
+            backlight.note_activity(now);
+        }
+
+        backlight.tick(now);
+
+        // Send key reports for the mapped keys
+        if pressed[0] {
             led_pin.set_high().unwrap();
-            leds[0] = key_press_color;
             hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::A]).ok();
         }
-        if key2_pressed {
+        if pressed[1] {
             led_pin.set_high().unwrap();
-            leds[1] = key_press_color;
             hid.device::<ConsumerControl<_>, _>().write_report(&MultipleConsumerReport {
                 codes: [Consumer::PlayPause, Consumer::Unassigned, Consumer::Unassigned, Consumer::Unassigned]
             }).ok();
         }
-        if key3_pressed {
+        if pressed[2] {
             led_pin.set_high().unwrap();
-            leds[2] = key_press_color;
             hid.device::<ConsumerControl<_>, _>().write_report(&MultipleConsumerReport {
                 codes: [Consumer::ScanNextTrack, Consumer::Unassigned, Consumer::Unassigned, Consumer::Unassigned]
             }).ok();
         }
-        if key4_pressed {
+        if pressed[3] {
             led_pin.set_high().unwrap();
-            leds[3] = key_press_color;
             hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::X]).ok();
         }
-        if key5_pressed {
+        if pressed[4] {
             led_pin.set_high().unwrap();
-            leds[4] = key_press_color;
             hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::U]).ok();
         }
-        if key6_pressed {
+        if pressed[5] {
             led_pin.set_high().unwrap();
-            leds[5] = key_press_color;
             hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::P]).ok();
         }
 
-        // If no keys pressed, turn off back LED and release all keys
-        if !key1_pressed && !key2_pressed && !key3_pressed && !key4_pressed && !key5_pressed && !key6_pressed {
+        // If no mapped key is pressed, turn off back LED and release all keys
+        if !pressed[..6].iter().any(|&p| p) {
             led_pin.set_low().unwrap();
             hid.device::<NKROBootKeyboard<_>, _>().write_report([Keyboard::NoEventIndicated]).ok();
             hid.device::<ConsumerControl<_>, _>().write_report(&MultipleConsumerReport {
@@ -256,12 +302,17 @@ fn main() -> ! {
             }).ok();
         }
 
-        // Update NeoPixel LEDs
-        ws2812.write_leds(&leds);
+        // Update NeoPixel LEDs, but only when something actually changed. The
+        // old code pushed 288 bits into the PIO FIFO every iteration regardless,
+        // which is pure waste once the pad has gone dark.
+        let leds = backlight.render(now, pressed);
+        if leds != last_written || now.saturating_sub(last_refresh_us) >= LED_REFRESH_US {
+            ws2812.write_leds(&leds);
+            last_written = leds;
+            last_refresh_us = now;
+        }
 
         // Delay to give LEDs time to latch (needs >50μs low signal)
         delay.delay_us(1000); // 1ms delay
     }
 }
-
-

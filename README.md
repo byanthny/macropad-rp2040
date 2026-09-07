@@ -39,7 +39,30 @@ cargo run --release
 9.
 10.
 11.
-12.
+12. LED on/off (local only, sends no keystroke)
+
+### LEDs
+
+Steady warm white at half brightness, switching to green under whichever key is
+held.
+
+They go dark on their own in two cases:
+
+- **No key pressed for 5 minutes.** Any key wakes them again, and that key still
+  does its normal job.
+- **The host goes to sleep.** The USB bus reports a suspend, so the pad goes dark
+  within seconds of the PC sleeping rather than waiting out the timeout. Resuming
+  the PC brings them back. Not every motherboard signals suspend properly, which
+  is why the timeout stays as a fallback.
+
+**Key 12** (bottom right) toggles them by hand. That off is sticky: media keys and
+everything else keep working while the pad stays dark, and it survives a
+sleep/wake cycle. Only key 12 turns them back on.
+
+Going dark takes about a second. Coming back takes a quarter of that, so the pad
+feels responsive under the hand without the light arriving as a hard snap.
+Interrupting a fade reverses it from wherever it had got to rather than jumping.
+Brightness and both fade times are constants at the top of `src/backlight.rs`.
 
 ## TODO (no order)
 
@@ -49,12 +72,18 @@ cargo run --release
 - [ ] Add OLED display support
 - [ ] Explore profiles and switching key mappings
 - [ ] LED effects
+- [x] LED auto-off on inactivity + manual off key
 - [ ] Clean up project
 - [ ] Use Enums or Trait Objects
 
 ## Notes & Bugs
 
 - usbd_hid crate was giving me issues with keyboard input not being recognized, used usbd-human-interface-device instead
+- Building from a git worktree nested inside the repo (e.g. `.claude/worktrees/...`)
+  fails to link with `region 'BOOT2' already defined`. Cargo merges every
+  `.cargo/config.toml` it finds walking up the tree, so `-Tlink.x` is passed twice
+  and `memory.x` gets included twice. Keep worktrees outside the repo, or build
+  with the flags supplied once via `RUSTFLAGS`.
 
 # Resources
 
@@ -62,6 +91,6 @@ cargo run --release
 - [Adafruit Macropad RP2040 Guide](https://learn.adafruit.com/adafruit-macropad-rp2040)
 - [Adafruit MacroPad Datasheet](https://github.com/adafruit/Adafruit-MacroPad-RP2040-PCB/blob/fdd7f2cb3bc2b3c7a9c0765780387647ea872141/Adafruit%20MacroPad%20RP2040%20Pinout.pdf)
 - [RP2040 HAL Template (pins are different used for setup)](https://github.com/rp-rs/rp2040-project-template)
-- [Adafruit Macropad BSP](https://lib.rs/crates/adafruit-macropad)
 - [BSP LED Blink Example](https://github.com/rp-rs/rp-hal-boards/blob/56e044061073fb49aef93984b629af5c5bc1a11c/boards/adafruit-macropad/examples/adafruit-macropad_blinky.rs)
+- [Adafruit Macropad BSP](https://lib.rs/crates/adafruit-macropad)
 - [usbd-human-interface-device](https://docs.rs/usbd-human-interface-device/)
